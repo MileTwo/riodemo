@@ -1,0 +1,26 @@
+version: '3'
+services:
+  add:
+    build:
+      context: ./services/add
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+
+  mult:
+    build:
+      context: ./services/mult
+      dockerfile: Dockerfile
+    environment:
+      - ADD_URL=http://192.168.200.120:8081
+    ports:
+      - "8082:8080"
+
+  power:
+    build:
+      context: ./services/power
+      dockerfile: Dockerfile
+    environment:
+      - MULT_URL=http://192.168.200.120:8082
+    ports:
+      - "8083:8080"
