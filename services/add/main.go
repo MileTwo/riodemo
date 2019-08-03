@@ -27,7 +27,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// The algorithm 
 	sum := x+y	
-	fmt.Printf("computing %s + %s = %s\n",strconv.Itoa(x),strconv.Itoa(y),strconv.Itoa(sum))
+	fmt.Printf("computing %d + %d = %d\n",x,y,sum)
 	
 	// Format json response
 	msg := addMessage{x,y,sum}
