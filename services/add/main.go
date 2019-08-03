@@ -7,6 +7,7 @@ import (
 		"strconv"
 		"encoding/json"
 )
+
 type addMessage struct {
 	X int
 	Y int
@@ -14,9 +15,10 @@ type addMessage struct {
 }
 
 func main() {
-		http.HandleFunc("/", handler)
-		log.Println("Listening on 8080")
-    http.ListenAndServe(":8080", nil)
+	port := "8080"
+	http.HandleFunc("/", handler)
+	log.Println("Listening on: " + port)
+  http.ListenAndServe(":"+ port, nil)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +29,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	// The algorithm 
 	sum := x+y	
-	fmt.Printf("computing %d + %d = %d\n",x,y,sum)
+	fmt.Printf("computed %d + %d = %d\n",x,y,sum)
 	
 	// Format json response
 	msg := addMessage{x,y,sum}

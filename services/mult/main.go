@@ -7,6 +7,7 @@ import (
 		"strconv"
 		"encoding/json"
 		"io/ioutil"
+		"os"
 )
 type multMessage struct {
 	X int
@@ -19,10 +20,13 @@ type addMessage struct {
 	Sum int
 }
 
+var ADD_URL string = os.Getenv("ADD_URL")
+
 func main() {
-		http.HandleFunc("/", handler)
-		log.Println("Listening on 8081")
-    http.ListenAndServe(":8081", nil)
+	port := "8080"
+	http.HandleFunc("/", handler)
+	log.Println("Listening on: " + port)
+  http.ListenAndServe(":"+ port, nil)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +41,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	for i := 1; i < x; i++ {
 		product = add(product,y)
 	}
-	fmt.Printf("computing %d x %d = %d\n",x,y,product)
+	fmt.Printf("computed %d x %d = %d\n",x,y,product)
 
 
 	// Format json response
@@ -47,7 +51,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func add(x int, y int) (sum int) {
-	url := fmt.Sprintf("http://localhost:8080?x=%d&y=%d", x,y)
+	url := fmt.Sprintf("%s?x=%d&y=%d",ADD_URL,x,y)
+	//log.Println("Call add service at: " + url)
 	resp, err := http.Get(url)
 	if err != nil {log.Fatalln(err)}
 	defer resp.Body.Close()

@@ -7,6 +7,7 @@ import (
 		"strconv"
 		"encoding/json"
 		"io/ioutil"
+		"os"
 )
 type powerMessage struct {
 	X int
@@ -19,14 +20,16 @@ type multMessage struct {
 	Product int
 }
 
+var MULT_URL string = os.Getenv("MULT_URL")
+
 func main() {
-		http.HandleFunc("/", handler)
-		log.Println("Listening on 8082")
-    http.ListenAndServe(":8082", nil)
+	port := "8080"
+	http.HandleFunc("/", handler)
+	log.Println("Listening on: " + port)
+  http.ListenAndServe(":"+ port, nil)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-
 	// Get parms
 	x,_ := strconv.Atoi(r.URL.Query()["x"][0])
 	y,_ := strconv.Atoi(r.URL.Query()["y"][0])
@@ -37,7 +40,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	for i := 1; i < y; i++ {
 		power = mult(power,x)
 	}
-	fmt.Printf("computing %d^%d = %d\n",x,y,power)
+	fmt.Printf("computed %d^%d = %d\n",x,y,power)
 
 
 	// Format json response
@@ -47,7 +50,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func mult(x int, y int) (product int) {
-	url := fmt.Sprintf("http://localhost:8081?x=%d&y=%d", x,y)
+	url := fmt.Sprintf("%s?x=%d&y=%d",MULT_URL,x,y)
+	//log.Println("Call mult service at: " + url)
 	resp, err := http.Get(url)
 	if err != nil {log.Fatalln(err)}
 	defer resp.Body.Close()
