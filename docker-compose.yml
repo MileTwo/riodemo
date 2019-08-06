@@ -12,7 +12,7 @@ services:
       context: ./services/mult
       dockerfile: Dockerfile
     environment:
-      - ADD_URL=http://192.168.200.120:8081
+      - ADD_URL=http://192.168.1.141:8081
     ports:
       - "8082:8080"
 
@@ -21,6 +21,6 @@ services:
       context: ./services/power
       dockerfile: Dockerfile
     environment:
-      - MULT_URL=http://192.168.200.120:8082
+      - MULT_URL=http://192.168.1.141:8082
     ports:
       - "8083:8080"

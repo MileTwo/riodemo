@@ -1,0 +1,83 @@
+PACKAGE_FOLDER := release-package
+REL_NAME := production
+REL_VER := $(shell yq r Chart.yaml 'version')
+M2_IMAGES := $(shell yq read requirements.yaml --tojson | jq .dependencies | jq 'map(select(.repository == "http://chartmuseum.dev.sb.mile-two.com"))' | jq --raw-output '.[] | .name + ":" + .version')
+3RD_PARTY_IMAGES :=  "bitnami/redis:4.0.14"
+M2_DOCKER_REG := docker-registry.dev.sb.mile-two.com:80/mile-two
+REMOTE_SCP_TARGET := "ubuntu@ec2-18-253-64-29.us-gov-east-1.compute.amazonaws.com"
+
+####################################################################################
+# This makefile is intended to run on the Mile Two network (your PC)
+####################################################################################
+define install_instructions
+	@echo "\n\n"
+	@echo "******************************************************************************"
+	@echo "You are now ready to install the release by performing the follwing steps:"
+	@echo "******************************************************************************"
+	@echo ""
+	@echo "Step 1. Copy the release package to the remote VM using scp "
+	@echo "        note your pem file may be in a different location"
+	@echo ""
+	@echo "        scp -i '~/.ssh/aws-gov-key.pem' ${PACKAGE_FOLDER}-${REL_NAME}-${REL_VER}.tgz ${REMOTE_SCP_TARGET}:~"
+	@echo ""
+	@echo "Step 2. ssh to the remote VM"
+	@echo ""
+	@echo "        ssh -i '~/.ssh/aws-gov-key.pem' ${REMOTE_SCP_TARGET}"
+	@echo ""
+	@echo "Step 3. Extract the package release and then the env chart"
+	@echo ""
+	@echo "        tar -xzvf ${PACKAGE_FOLDER}-${REL_NAME}-${REL_VER}.tgz"
+	@echo "        cd release-package"
+	@echo "        tar -xzvf env-${REL_VER}.tgz"
+	@echo ""
+	@echo "Step 4. Navigate into the chart folder and run make targets"
+	@echo ""
+	@echo "        cd env"
+	@echo "        make -f Makefile.remote install"
+	@echo "\n"
+endef
+
+clean:
+	rm -rf ${PACKAGE_FOLDER}
+	rm -rf ${PACKAGE_FOLDER}-*.tgz
+	rm -rf ${REL_NAME}*.tgz
+	rm -rf chart
+
+build: clean
+	rm -rf requirements.lock
+	helm dependency build
+	helm lint
+	
+
+pack-chart: build
+	mkdir -p ${PACKAGE_FOLDER}
+	helm lint
+	helm package --destination ${PACKAGE_FOLDER} .
+
+pack-images: pack-chart
+	mkdir -p ${PACKAGE_FOLDER}/images
+
+	# package up dependant Mile Two images
+	for image in ${M2_IMAGES}; do \
+		docker pull ${M2_DOCKER_REG}/$$image; \
+		docker tag ${M2_DOCKER_REG}/$$image $$image; \
+		docker save $$image > ${PACKAGE_FOLDER}/images/`echo $$image | sed 's/:/-/g;s/\//-/g'`.tar; \
+	done
+
+	# package up dependant 3rd Party images
+	for image in ${3RD_PARTY_IMAGES}; do \
+		docker pull $$image; \
+		docker save $$image > ${PACKAGE_FOLDER}/images/`echo $$image | sed 's/:/-/g;s/\//-/g'`.tar; \
+	done
+
+pack-release-charts-only: pack-chart
+	# create release archive package
+	tar -cvzf ${PACKAGE_FOLDER}-${REL_NAME}-${REL_VER}.tgz ${PACKAGE_FOLDER}
+	$(call install_instructions)
+	
+pack-release: pack-images
+	# create release archive package
+	tar -cvzf ${PACKAGE_FOLDER}-${REL_NAME}-${REL_VER}.tgz ${PACKAGE_FOLDER}
+	$(call install_instructions)
+
+
