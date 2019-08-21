@@ -25,7 +25,7 @@ type addMessage struct {
 var addURL = os.Getenv("ADD_URL")
 
 func main() {
-	port := "8080"
+	port := "80"
 	http.HandleFunc("/", handler)
 	log.Println("Listening on: " + port)
 	http.ListenAndServe(":"+port, nil)

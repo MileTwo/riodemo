@@ -1,0 +1,403 @@
+---
+Context: null
+Name: default/hi-service
+Obj:
+  App:
+    apiVersion: rio.cattle.io/v1
+    kind: App
+    metadata:
+      annotations:
+        objectset.rio.cattle.io/applied: '{"kind":"App","apiVersion":"rio.cattle.io/v1","metadata":{"name":"hi-service","namespace":"default","creationTimestamp":null,"labels":{"objectset.rio.cattle.io/hash":"fc009cb1153234f11069b0aac2bcf65033e5ba25"},"annotations":{"objectset.rio.cattle.io/id":"default/hi-service"}},"spec":{"revisions":[{"public":true,"serviceName":"hi-service","Version":"v1","adjustedWeight":100,"weight":100,"scale":1,"scaleStatus":{"ready":1,"updated":1},"deploymentReady":true,"rollout":true,"rolloutIncrement":5,"rolloutInterval":5}]},"status":{}}'
+        objectset.rio.cattle.io/id: default/hi-service
+      creationTimestamp: "2019-08-21T19:47:41Z"
+      finalizers:
+      - wrangler.cattle.io/routing-serviceset-object-controller-remove
+      generation: 37
+      labels:
+        objectset.rio.cattle.io/hash: fc009cb1153234f11069b0aac2bcf65033e5ba25
+      name: hi-service
+      namespace: default
+      resourceVersion: "156047"
+      selfLink: /apis/rio.cattle.io/v1/namespaces/default/apps/hi-service
+      uid: 89c83037-c44c-11e9-a134-025000000001
+    spec:
+      revisions:
+      - Version: v1
+        adjustedWeight: 100
+        deploymentReady: true
+        public: true
+        rollout: true
+        rolloutIncrement: 5
+        rolloutInterval: 5
+        scale: 1
+        scaleStatus:
+          ready: 1
+          updated: 1
+        serviceName: hi-service
+        weight: 100
+    status:
+      conditions:
+      - lastUpdateTime: "2019-08-21T19:47:42Z"
+        status: "True"
+        type: DeployedRoutingServiceset
+      endpoints:
+      - https://hi-service-default.a4m7af.on-rio.io:9443
+      revisionWeight:
+        v1:
+          lastWrite: "2019-08-21T19:47:42Z"
+          serviceName: hi-service
+          weight: 100
+  Revisions:
+    v1:
+      Pods:
+      - metadata:
+          annotations:
+            sidecar.istio.io/statsInclusionPrefixes: http,cluster_manager,listener_manager,http_mixer_filter,tcp_mixer_filter,server,cluster.xds-grpc
+            sidecar.istio.io/status: '{"version":"fb32361a0a0fd0bf2b104f718b7d4ff2411b03ecea1534406ab8ac40d8e78640","initContainers":["istio-init"],"containers":["istio-proxy"],"volumes":["istio-envoy","istio-certs"],"imagePullSecrets":null}'
+          creationTimestamp: "2019-08-21T19:47:41Z"
+          generateName: hi-service-9bb4fc6d-
+          labels:
+            app: hi-service
+            pod-template-hash: 9bb4fc6d
+            version: v1
+          name: hi-service-9bb4fc6d-jvtgf
+          namespace: default
+          ownerReferences:
+          - apiVersion: apps/v1
+            blockOwnerDeletion: true
+            controller: true
+            kind: ReplicaSet
+            name: hi-service-9bb4fc6d
+            uid: 89c50900-c44c-11e9-a134-025000000001
+          resourceVersion: "154707"
+          selfLink: /api/v1/namespaces/default/pods/hi-service-9bb4fc6d-jvtgf
+          uid: 89c65086-c44c-11e9-a134-025000000001
+        spec:
+          automountServiceAccountToken: false
+          containers:
+          - env:
+            - name: FEATURE
+              value: green
+            image: hi:v1
+            imagePullPolicy: IfNotPresent
+            name: hi-service
+            ports:
+            - containerPort: 80
+              protocol: TCP
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          - args:
+            - proxy
+            - sidecar
+            - --domain
+            - $(POD_NAMESPACE).svc.cluster.local
+            - --configPath
+            - /etc/istio/proxy
+            - --binaryPath
+            - /usr/local/bin/envoy
+            - --serviceCluster
+            - hi-service.$(POD_NAMESPACE)
+            - --drainDuration
+            - 45s
+            - --parentShutdownDuration
+            - 1m0s
+            - --discoveryAddress
+            - istio-pilot.rio-system:15010
+            - --zipkinAddress
+            - ""
+            - --connectTimeout
+            - 30s
+            - --proxyAdminPort
+            - "15000"
+            - --controlPlaneAuthPolicy
+            - NONE
+            - --statusPort
+            - "15020"
+            - --applicationPorts
+            - "80"
+            - --concurrency
+            - "2"
+            env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: INSTANCE_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            - name: ISTIO_META_POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+            - name: ISTIO_META_CONFIG_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: ISTIO_META_INTERCEPTION_MODE
+              value: REDIRECT
+            - name: ISTIO_METAJSON_ANNOTATIONS
+              value: |
+                {"sidecar.istio.io/statsInclusionPrefixes":"http,cluster_manager,listener_manager,http_mixer_filter,tcp_mixer_filter,server,cluster.xds-grpc"}
+            - name: ISTIO_METAJSON_LABELS
+              value: |
+                {"app":"hi-service","version":"v1"}
+            image: docker.io/istio/proxyv2:1.1.3
+            imagePullPolicy: IfNotPresent
+            name: istio-proxy
+            ports:
+            - containerPort: 15090
+              name: http-envoy-prom
+              protocol: TCP
+            readinessProbe:
+              failureThreshold: 30
+              httpGet:
+                path: /healthz/ready
+                port: 15020
+                scheme: HTTP
+              initialDelaySeconds: 1
+              periodSeconds: 2
+              successThreshold: 1
+              timeoutSeconds: 1
+            resources:
+              limits:
+                cpu: "2"
+                memory: 128Mi
+              requests:
+                cpu: 10m
+                memory: 40Mi
+            securityContext:
+              procMount: Default
+              readOnlyRootFilesystem: true
+              runAsUser: 1337
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+            - mountPath: /etc/istio/proxy
+              name: istio-envoy
+            - mountPath: /etc/certs/
+              name: istio-certs
+              readOnly: true
+          dnsPolicy: ClusterFirst
+          enableServiceLinks: false
+          initContainers:
+          - args:
+            - -p
+            - "15001"
+            - -u
+            - "1337"
+            - -m
+            - REDIRECT
+            - -i
+            - 10.96.0.1/16
+            - -x
+            - 10.43.0.0/31
+            - -b
+            - "80"
+            - -d
+            - "15020"
+            image: docker.io/istio/proxy_init:1.1.3
+            imagePullPolicy: IfNotPresent
+            name: istio-init
+            resources:
+              limits:
+                cpu: 100m
+                memory: 50Mi
+              requests:
+                cpu: 10m
+                memory: 10Mi
+            securityContext:
+              capabilities:
+                add:
+                - NET_ADMIN
+              procMount: Default
+              runAsNonRoot: false
+              runAsUser: 0
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+          nodeName: docker-desktop
+          priority: 0
+          restartPolicy: Always
+          schedulerName: default-scheduler
+          securityContext: {}
+          serviceAccount: default
+          serviceAccountName: default
+          terminationGracePeriodSeconds: 30
+          tolerations:
+          - effect: NoExecute
+            key: node.kubernetes.io/not-ready
+            operator: Exists
+            tolerationSeconds: 300
+          - effect: NoExecute
+            key: node.kubernetes.io/unreachable
+            operator: Exists
+            tolerationSeconds: 300
+          volumes:
+          - emptyDir:
+              medium: Memory
+            name: istio-envoy
+          - name: istio-certs
+            secret:
+              defaultMode: 420
+              optional: true
+              secretName: istio.default
+        status:
+          conditions:
+          - lastProbeTime: null
+            lastTransitionTime: "2019-08-21T19:47:45Z"
+            status: "True"
+            type: Initialized
+          - lastProbeTime: null
+            lastTransitionTime: "2019-08-21T19:47:48Z"
+            status: "True"
+            type: Ready
+          - lastProbeTime: null
+            lastTransitionTime: "2019-08-21T19:47:48Z"
+            status: "True"
+            type: ContainersReady
+          - lastProbeTime: null
+            lastTransitionTime: "2019-08-21T19:47:41Z"
+            status: "True"
+            type: PodScheduled
+          containerStatuses:
+          - containerID: docker://5013f814a1c262a22d4d3c3eec9176c066a6ad782fc4f9d85b2a639fbcb222da
+            image: hi:v1
+            imageID: docker://sha256:c087571a1b3e4e6f2db50a0e13acb1cb3c07a497dd13aee29ebdf5ea21774e8f
+            lastState: {}
+            name: hi-service
+            ready: true
+            restartCount: 0
+            state:
+              running:
+                startedAt: "2019-08-21T19:47:46Z"
+          - containerID: docker://994df4ffa8ffdd33e62b33741fc05d4d722f4a73e041588415922a8548b4d434
+            image: istio/proxyv2:1.1.3
+            imageID: docker-pullable://istio/proxyv2@sha256:b682918f2f8fcca14b3a61bbd58f4118311eebc20799f24b72ceddc5cd749306
+            lastState: {}
+            name: istio-proxy
+            ready: true
+            restartCount: 0
+            state:
+              running:
+                startedAt: "2019-08-21T19:47:46Z"
+          hostIP: 192.168.65.3
+          initContainerStatuses:
+          - containerID: docker://db3a16639cc1531f82def5c0052d8e536eacd97115638a4d163929421276f5b6
+            image: istio/proxy_init:1.1.3
+            imageID: docker-pullable://istio/proxy_init@sha256:000d022d27c198faa6cc9b03d806482d08071e146423d6e9f81aa135499c4ed3
+            lastState: {}
+            name: istio-init
+            ready: true
+            restartCount: 0
+            state:
+              terminated:
+                containerID: docker://db3a16639cc1531f82def5c0052d8e536eacd97115638a4d163929421276f5b6
+                exitCode: 0
+                finishedAt: "2019-08-21T19:47:45Z"
+                reason: Completed
+                startedAt: "2019-08-21T19:47:44Z"
+          phase: Running
+          podIP: 10.1.3.177
+          qosClass: Burstable
+          startTime: "2019-08-21T19:47:41Z"
+      Revision:
+        apiVersion: rio.cattle.io/v1
+        kind: Service
+        metadata:
+          creationTimestamp: "2019-08-21T19:47:41Z"
+          finalizers:
+          - wrangler.cattle.io/stack-service-object-controller-remove
+          - wrangler.cattle.io/autoscale-service-object-controller-remove
+          - wrangler.cattle.io/stack-service-build-object-controller-remove
+          - wrangler.cattle.io/routing-service-object-controller-remove
+          generation: 148
+          name: hi-service
+          namespace: default
+          resourceVersion: "156051"
+          selfLink: /apis/rio.cattle.io/v1/namespaces/default/services/hi-service
+          uid: 89bfacdf-c44c-11e9-a134-025000000001
+        spec:
+          concurrency: 10
+          env:
+          - name: FEATURE
+            value: green
+          image: hi:v1
+          imagePullPolicy: IfNotPresent
+          maxScale: 10
+          minScale: 1
+          ports:
+          - port: 80
+            protocol: HTTP
+            targetPort: 80
+          rollout: true
+          rolloutIncrement: 5
+          rolloutInterval: 5
+          scale: 1
+          version: v1
+          weight: 100
+        status:
+          conditions:
+          - lastUpdateTime: "2019-08-21T19:52:30Z"
+            status: "True"
+            type: DeployedStackService
+          - lastUpdateTime: "2019-08-21T19:52:30Z"
+            status: "True"
+            type: DeployedAutoscaleService
+          - lastUpdateTime: "2019-08-21T19:52:30Z"
+            status: "True"
+            type: DeployedStackServiceBuild
+          - lastUpdateTime: "2019-08-21T19:52:30Z"
+            status: "True"
+            type: DeployedRoutingService
+          deploymentStatus:
+            availableReplicas: 1
+            conditions:
+            - lastTransitionTime: "2019-08-21T19:47:41Z"
+              lastUpdateTime: "2019-08-21T19:47:48Z"
+              message: ReplicaSet "hi-service-9bb4fc6d" has successfully progressed.
+              reason: NewReplicaSetAvailable
+              status: "True"
+              type: Progressing
+            - lastTransitionTime: "2019-08-21T19:51:19Z"
+              lastUpdateTime: "2019-08-21T19:51:19Z"
+              message: Deployment has minimum availability.
+              reason: MinimumReplicasAvailable
+              status: "True"
+              type: Available
+            readyReplicas: 1
+            replicas: 1
+            updatedReplicas: 1
+          endpoints:
+          - https://hi-service-v1-default.a4m7af.on-rio.io:9443
+          observedScale: 1
+          scaleStatus:
+            ready: 1
+            updated: 1
+  annotations:
+    objectset.rio.cattle.io/applied: '{"kind":"App","apiVersion":"rio.cattle.io/v1","metadata":{"name":"hi-service","namespace":"default","creationTimestamp":null,"labels":{"objectset.rio.cattle.io/hash":"fc009cb1153234f11069b0aac2bcf65033e5ba25"},"annotations":{"objectset.rio.cattle.io/id":"default/hi-service"}},"spec":{"revisions":[{"public":true,"serviceName":"hi-service","Version":"v1","adjustedWeight":100,"weight":100,"scale":1,"scaleStatus":{"ready":1,"updated":1},"deploymentReady":true,"rollout":true,"rolloutIncrement":5,"rolloutInterval":5}]},"status":{}}'
+    objectset.rio.cattle.io/id: default/hi-service
+  creationTimestamp: "2019-08-21T19:47:41Z"
+  finalizers:
+  - wrangler.cattle.io/routing-serviceset-object-controller-remove
+  generation: 37
+  labels:
+    objectset.rio.cattle.io/hash: fc009cb1153234f11069b0aac2bcf65033e5ba25
+  name: hi-service
+  namespace: default
+  resourceVersion: "156047"
+  selfLink: /apis/rio.cattle.io/v1/namespaces/default/apps/hi-service
+  uid: 89c83037-c44c-11e9-a134-025000000001
+

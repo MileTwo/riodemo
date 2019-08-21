@@ -1,0 +1,8 @@
+services:
+  hi:
+    image: hi:v1
+    ports:
+    - 8080/http
+#    env:
+#    - TEST=TEST1
+    scale: 5

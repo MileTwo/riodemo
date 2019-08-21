@@ -25,7 +25,7 @@ type multMessage struct {
 var MULT_URL string = os.Getenv("MULT_URL")
 
 func main() {
-	port := "8080"
+	port := "80"
 	http.HandleFunc("/", handler)
 	log.Println("Listening on: " + port)
 	http.ListenAndServe(":"+port, nil)

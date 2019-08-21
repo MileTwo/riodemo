@@ -1,20 +1,24 @@
-CONTAINER_REPO_URL := release-package
-
 buildv1:
-	docker build -t miletwo/add-svr:v1 ./services/add
-	docker build -t miletwo/mult-svr:v1 ./services/mult
-	docker build -t miletwo/power-svr:v1 ./services/power
+	# docker build -t add:v1 ./services/add
+	# docker build -t mult:v1 ./services/mult
+	# docker build -t power:v1 ./services/power
+	docker build -t hi:tag1 ./services/hi
 
-pushv1:
-	docker push miletwo/add-svr:v1
-	docker push miletwo/mult-svr:v1
-	docker push miletwo/power-svr:v1
+# pushv1:
+# 	docker push miletwo/add:v1
+# 	docker push miletwo/mult:v1
+# 	docker push miletwo/power:v1
 
 up:
-	rio up --namespace m2 --file ./Riofile 
-	#rio scale add-svr=1-20
-	#rio scale mult-svr=1-20
-	#rio scale power-svr=1-20
+	rio up --namespace n1 --file ./Riofile 
+	#rio scale n1/add=1-5
+	#rio scale mult=1-20
+	#rio scale power=1-20
+
+routs:
+	rio route add add/to-add-v0 to n1/add
 
 run:
-	# rio -namespace m2 run -p 80/http --name add-svr miletwo/add-svr:v1.1	
+	rio run --ports 80/http --name hi-service --env FEATURE=green --version v1 hi:v1	
+	
+

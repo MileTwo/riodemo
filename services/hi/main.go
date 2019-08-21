@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"time"
 )
 
-type addMessage struct {
-	X   int
-	Y   int
-	Sum int
+type hiMessage struct {
+	Message string
+	Color   string
 }
+
+// Get Env Vars
+var color = "Green"
 
 func main() {
 	port := "80"
@@ -22,19 +23,11 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("handling request")
-	time.Sleep(time.Second * 1)
-
-	// Get parms
-	x, _ := strconv.Atoi(r.URL.Query()["x"][0])
-	y, _ := strconv.Atoi(r.URL.Query()["y"][0])
-
-	// The algorithm
-	sum := x + y
-	log.Printf("computed %d + %d = %d\n", x, y, sum)
+	log.Printf("handling request with color:[%s]", color)
+	time.Sleep(1 * time.Second)
 
 	// Format json response
-	msg := addMessage{x, y, sum}
+	msg := hiMessage{"hi", color}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(msg)

@@ -1,22 +1,22 @@
 services:
-  add-svr:
-    image: miletwo/add-svr:v1
+  add:
+    image: add:v1
     ports:
-    - 8080/http
-    scale: 1  
+    - 80/http
+    scale: 1-5
 
-  mult-svr:
-    image: miletwo/mult-svr:v1
+  mult:
+    image: mult:v1
     ports:
-    - 8080/http
+    - 80/http
     env:
-    - ADD_URL=http://add-svr:8080
+    - ADD_URL=http://add
     scale: 1
   
-  power-svr:
-    image: miletwo/power-svr:v1
+  power:
+    image: power:v1
     ports:
-    - 8080/http
+    - 80/http
     env:
-    - MULT_URL=http://mult-svr:8080 
+    - MULT_URL=http://mult
     scale: 1
