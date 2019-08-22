@@ -4,13 +4,27 @@ Demo rio
 
 ## Prep
 
-Do this ahead of time:
+To get started we need a few docker images to use in our demo. Start by cloning this repo.  All command in this article assum you are in the project root.
+
+* `make docker-build` - this will build two docker images that are used throught this demo. The images are:
+  * `flower:yellowsun` - This image will listen on port 8080 and respond to a GET request by displaying ing 
+    ```
+      {
+        "Variety": "sunflower",
+        "Color": "yellow"
+      }
+    ```
+
+  	docker build --build-arg COLOR=yellow --build-arg VARIETY=sunflower -t flower:yellowsun .
+	docker build --build-arg COLOR=blue   --build-arg VARIETY=sunflower -t flower:bluesun .
+
 
 ```bash
+
 docker build -t hi:blue .
 docker build -t hi:green .
 # test
-docker run -it --rm -p 80:80 hi:blue
+docker run -it --rm -p 8080:80 hi:blue
 
 # Install rio cli
 $ curl -sfL https://get.rio.io | sh –
@@ -25,7 +39,7 @@ rio info
 ## Auto scale a service
 
 ```bash
-rio run --ports 80/http --name hi-service hi:blue
+rio run --ports 8080/http --name hi-service hi:blue
 
 # Verify cert in browser
 rio ps
@@ -51,7 +65,7 @@ rio stage --image=hi:green hi-service
 # The service endpoint still returns "blue" becauess it is 100% weight
 rio revision hi-service
 
-# Promote green service. 
+# Promote green service.
 # The traffic will be shifted gradually. By default we apply a 5% shift every 5 seconds
 [terminal 1] watch rio ps
 [terminal 2] hey -z 3m -c 40 <url of service endbpoint>
@@ -69,7 +83,7 @@ $ rio weight hi-service:v0=5% hi-service:v???=95%
 [terminal 1] watch rio ps
 [terminal 2] watch kubectl get pods
 [terminal 3]
-rio run -p 80/http --name hi-service --scale=0-10 hi:blue
+rio run -p 8080/http --name hi-service --scale=0-10 hi:blue
 rio scale hi-service=1
 rio scale hi-service=2
 rio scale hi-service=3
