@@ -1,13 +1,6 @@
-buildv1:
-	# docker build -t add:v1 ./services/add
-	# docker build -t mult:v1 ./services/mult
-	# docker build -t power:v1 ./services/power
-	docker build -t hi:tag1 ./services/hi
-
-# pushv1:
-# 	docker push miletwo/add:v1
-# 	docker push miletwo/mult:v1
-# 	docker push miletwo/power:v1
+docker-build:
+	docker build --build-arg COLOR=yellow --build-arg VARIETY=sunflower -t flower:yellowsun .
+	docker build --build-arg COLOR=blue   --build-arg VARIETY=sunflower -t flower:bluesun .
 
 up:
 	rio up --namespace n1 --file ./Riofile 
@@ -19,6 +12,6 @@ routs:
 	rio route add add/to-add-v0 to n1/add
 
 run:
-	rio run --ports 80/http --name hi-service --env FEATURE=green --version v1 hi:v1	
+	rio run --ports 8080/http --name hi-service --env FEATURE=green --version v1 hi:v1	
 	
 
