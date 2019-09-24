@@ -1,6 +1,7 @@
 docker-build:
-	docker build --build-arg COLOR=yellow --build-arg VARIETY=sunflower -t flower:yellowsun .
-	docker build --build-arg COLOR=blue   --build-arg VARIETY=sunflower -t flower:bluesun .
+	docker build --build-arg COLOR=yellow -t flower:yellow .
+	docker build --build-arg COLOR=blue   -t flower:blue .
+	docker build --build-arg COLOR=red   -t flower:red .
 
 up:
 	rio up --namespace n1 --file ./Riofile 
