@@ -1,6 +1,6 @@
 pipeline {
   agent {
-    label "jenkins-nodejs"
+    label "jenkins-go"
   }
   environment {
     ORG = 'miletwo'
@@ -19,7 +19,7 @@ pipeline {
         HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
       }
       steps {
-        container('nodejs') {
+        container('go') {
           sh "jx step credential -s npm-token -k file -f /builder/home/.npmrc --optional=true"
           sh "npm install"
           sh "CI=true DISPLAY=:99 npm test"
@@ -37,19 +37,16 @@ pipeline {
         branch 'cicd'
       }
       steps {
-        container('nodejs') {
+        container('go') {
 
           // ensure we're not on a detached head
           sh "git checkout cicd"
-          sh "git config --global credential.helper store"
-          sh "jx step git credentials"
+          //sh "git config --global credential.helper store"
+          //sh "jx step git credentials"
 
           // so we can retrieve the version in later steps
           sh "echo \$(jx-release-version) > VERSION"
           sh "jx step tag --version \$(cat VERSION)"
-          sh "jx step credential -s npm-token -k file -f /builder/home/.npmrc --optional=true"
-          sh "npm install"
-          sh "CI=true DISPLAY=:99 npm test"
           sh "export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml"
           sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
         }
