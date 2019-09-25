@@ -4,7 +4,7 @@ The article is intended to give an introduction to Rio by way of example. Certai
 
 ## Rio Concepts
 
-To understand Rio we will need to understand a few basic Rio concepts:
+Rio is a MicroPaaS that can be layered on top of any standard Kubernetes cluster. To understand Rio we will need to understand a few basic Rio concepts:
 
 * **Service** – Scalable set of containers that provide a similar function.
 * **App** – Contains multiple service revisions.  Each revision gets it’s own DNS name. 
@@ -257,6 +257,7 @@ Kiali setings:
 
 ![kiali1](img/kiali-key.png)
 
+![kiali1](img/kiali07.png)
 
 ## Canary Deployment
 
