@@ -58,7 +58,7 @@ pipeline {
         branch 'cicd'
       }
       steps {
-        container('nodejs') {
+        container('go') {
           dir('./charts/riodemo') {
             sh "jx step changelog --batch-mode --version v\$(cat ../../VERSION)"
 
