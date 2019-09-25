@@ -4,6 +4,6 @@ services:
   flower:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.multi
     ports:
-      - "8080:8080"
+      - "8080:80"
