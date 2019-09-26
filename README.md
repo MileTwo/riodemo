@@ -423,7 +423,24 @@ In summary, serverless is just an autoscaling feature of Rio with the ability to
 
 ## Adding Router
 
-Router is a set of L7 load-balancing rules that can route between your services. It can add Header-based, path-based routing, cookies and other rules. Example uses cases include:
+Router is a set of L7 load-balancing rules that can route between your services. It can add Header-based, path-based routing, cookies and other rules. 
+
+```bash
+# create route
+$ rio route add myflowerrt.demo to demo/myflower
+
+# display route URL
+$ rio route
+NAME              URL                                        OPTS      ACTION    TARGET
+demo/myflowerrt   https://myflowerrt-demo.3lzq3l.on-rio.io             to        myflower,port=80
+
+# test route
+$ curl https://myflowerrt-demo.3lzq3l.on-rio.io 
+{"Color":"yellow"}
+
+```
+
+Example uses cases include:
 
 * Create router in a different namespace
 * Create a route based path match
@@ -439,11 +456,11 @@ Router is a set of L7 load-balancing rules that can route between your services.
 * Add retry logic
 * Create router to different revision and different weight
 
-I a future post we will take a closer look at Rio routing, for now you can see the [official Rio docs](https://github.com/rancher/rio/blob/master/docs/README.md#adding-router) for more information.
+In a future post we will take a closer look at Rio routing, for now you can see the [official Rio docs](https://github.com/rancher/rio/blob/master/docs/README.md#adding-router) for more information.
 
 ## Monitoring
 
-We had a quick look at the Istio Performance Dashboard above but there is much more on monitoring and alertine that we will cover in a future post.  For now I will leave it to you to look around.
+We had a quick look at the Istio Performance Dashboard above but there is much more on monitoring and alerting that we will cover in a future post.  For now I will leave it to you to look around.
 
 To access Grafana:
 
@@ -457,6 +474,6 @@ https://grafana-rio-system.3lzq3l.on-rio.io
 
 ## Rio File
 
-The `rio run` command is powerful but just like the `docker run` command it can quickly get out of hand and hard to maintain all the command line parameters.  Therefore, Rio has added support for a more user-friendly docker-compose-style config file call Riofile. Riofile allows you define rio services, apps, routes, external services, configmap, and secrets.
+The `rio run` command is powerful but just like the `docker run` command it can quickly get out of hand and hard to maintain all the command line parameters.  Therefore, Rio has added support for a more user-friendly docker-compose-style config file call Riofile. Riofile allows you define rio services, apps, routes, external services, configmap, and secrets. 
 
 For more information see the [official Riod docs](https://github.com/rancher/rio/blob/master/docs/README.md#using-riofile) for more information.
