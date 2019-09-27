@@ -291,7 +291,7 @@ To review an application's revision use the `rio revision` command.
 ```bash
 $ rio revision demo/myflower
 Name                   IMAGE           CREATED             SCALE     ENDPOINT                                        WEIGHT    DETAIL
-demo/myflower:v40157    flower:blue     24 minutes ago      1         https://myflower-v40157 -demo.xvw8xv.on-rio.io   0         
+demo/myflower:v40157   flower:blue     24 minutes ago      1         https://myflower-v40157 -demo.xvw8xv.on-rio.io   0         
 demo/myflower:v0       flower:yellow   About an hour ago   1         https://myflower-v0-demo.xvw8xv.on-rio.io       100       
 ```
 
@@ -352,7 +352,7 @@ Name            CREATED       ENDPOINT                                 REVISIONS
 demo/myflower   2 hours ago   https://myflower-demo.xvw8xv.on-rio.io   v40157       1         100%
 ```
 
-Here is what the promotion looks like in the Kiali UI. Just like above at each point we see the traffic switching over to `v40157 ` revision until it reaches 100%
+Here is what the promotion looks like in the Kiali UI. Just like above at each point we see the traffic switching over to `v40157` revision until it reaches 100%
 
 > timestamp 1
 ![kiali1](img/kiali03.png)
