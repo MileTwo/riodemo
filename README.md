@@ -165,6 +165,20 @@ Let's try pasting the endpoint URL into out browser. Notice that the TLS cert is
 
 ![browser cert](img/browser-cert.png)
 
+
+Let's see what it looks like in Kiali
+
+```bash
+rio -s ps
+
+#looks for
+https://kiali-rio-system.3lzq3l.on-rio.io 
+```
+
+![kiali initial](img/kiali00.png)
+
+
+
 ## Auto scale a service
 
 Let's explore the auto scale features of Rio using the service we just created. Rio will default the service scale to min=1 and max=10 containers. Use the `rio inspect` to view the scaling properties.
