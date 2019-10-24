@@ -1,31 +1,35 @@
-# Rio Demo
+# An Introduction to Rio
 
-The article is intended to give an introduction to Rio by way of example. Certain features of Rio will be demonstrated. This article is written in a way that it can double as a turoral.  You are invited to follow alonge.
+Rio is an [open source project](https://github.com/rancher/rio) from [Rancher Labs](https://rancher.com).  On the [Rio project page](https://rio.io/) it is described as a MicroPass for Kubernetes. Looking under the covers we find a list of popular Kubernetes projects such as Istio, Knative, Let's Encrypt, Prometheus and more. Rio's focus is on simplicity, integrating these feature rich projects and giving you an easy way to get up and running quickly.  As you will see in this article, Rio does deliver on their claim:
+
+> "[Rio] gives you simple commands to deploy, manage, scale, and version applications, which means that you can run your apps the way you want to without having to spend time wiring them together"
+
+If your company is investing in Kubernetes or you have a personal interest in becoming more productive on the platform then you will want to learn more about Rio. The project is currently in Alpha status but from what I have seen so far is powerful and fun to work with!
+
+This article gives an introduction to Rio by way of example. Certain features of Rio are demonstrated to give us an idea of its capabilities and the effort required to accomplish our goals. The Rio commands and their output are shown making it possible to get a lot from simply reading the examples. However, it is written as a tutorial and you are invited to follow along; the source code referenced in this article can be found [our this github page](https://github.com/MileTwo/riodemo).
 
 ## Rio Concepts
 
 Rio is a MicroPaaS that can be layered on top of any standard Kubernetes cluster. To understand Rio we will need to understand a few basic Rio concepts:
 
-* **Service** – Scalable set of containers that provide a similar function.
-* **App** – Contains multiple service revisions.  Each revision gets it’s own DNS name. 
-* **Router** – Virtual service that routes and load balances traffic. Rules based on hostname, path, headers, protocol & source.
-* **External Service** – A way of registering external IPs or hostnames into the service mesh such that they may be accessed via short name.
-* **Service Mesh** – Istio service mesh, deployed for securing, routing, monitoring, and controlling inter- and intra- service traffic.
+* **Service** – Scalable set of containers that provide a similar function
+* **App** – Contains multiple service revisions.  Each revision gets it’s own DNS name
+* **Router** – Virtual service that routes and load balances traffic. Rules based on hostname, path, headers, protocol & source
+* **External Service** – A way of registering external IPs or hostnames into the service mesh such that they may be accessed via short name
+* **Service Mesh** – Istio service mesh, deployed for securing, routing, monitoring, and controlling inter- and intra- service traffic
 
 ## Service Mesh
 
-A *service mesh* is a large topic one that we can not adequately cover here, see the [Istio Docs](https://istio.io/docs/concepts/what-is-istio/) for more information. However, it is worth pointing out a few key featrue so that we can understand better what is happening.
+A *service mesh* is a large topic one that we can not adequately cover here, see the [Istio Docs](https://istio.io/docs/concepts/what-is-istio/) for more information. However, it is worth pointing out a few key feature in order to understand better what is happening.
 
-Istio will install a proxy on each pod, a "sidecar". The proxy implements L7 routing which enables Isto to implment certain features such as:
+Istio will install a proxy on each pod, a "sidecar". The proxy implements L7 routing which allows Isto to implement certain features such as:
 
 * circuit breakers
 * policy enforcement
 * metrics collection and reporting
-* security
-  * defend against *man-in-the-middle* attack
-  * service access control
-  * audit who did what at what time
-
+* defend against *man-in-the-middle* attack
+* service access control
+* audit who did what at what time
 
 All traffic entering and leaving the pod is routed via the proxy without requiring any application changes
 
@@ -33,21 +37,22 @@ All traffic entering and leaving the pod is routed via the proxy without requiri
 
 ## Prerequisites
 
-To run the demo you will need the following:
+To execute the example you will need the following:
 
 * A Kubernetes 1.13 or newer cluster running. I am using [Docker Desktop](https://docs.docker.com/docker-for-mac/install/) to host a cluster on my Mac
 * The `kubectl` CLI installed and pointed at your cluster. See the [Kubernetes official doc](https://kubernetes.io/docs/tasks/tools/install-kubectl/) for install and setup instructions
 * The `hey` program used for load testing. See [the hey GitHub page](https://github.com/rakyll/hey) for install instructions
 * The *Rio CLI*. The install instruction can be found on [the Rio GitHub page](https://github.com/rancher/rio)  
 
+Let's looks at the Rio install process to understand better what is involved:
+
 ```bash
 # Download the CLI (available for macOS, Windows, Linux)
-curl -sfL https://get.rio.io | sh -   
+curl -sfL https://get.rio.io | sh -
 
 # Install Rio into the cluster
 # Using service loadbalancer (mode=svclib) because my cluster does have an ingress
 $ rio  install --mode svclib
-
 Deploying Rio control plane....
 rio controller version v0.4.0 (a8d35ef9) installed into namespace rio-system
 Detecting if clusterDomain is accessible...
@@ -58,7 +63,6 @@ Welcome to Rio!
 
 Run `rio run https://github.com/rancher/rio-demo` as an example
   
-
 # Check the status
 $ rio info
 Rio Version: v0.4.0 (a8d35ef9)
@@ -86,64 +90,59 @@ rio console
 
 ## Demo Containers
 
-To get started we need a few docker containers to use in our demo. For this purpose we will build a few images and store them in our local container registry. Start by cloning this repo.  All command in this article assume you are in the project root folder.
+To get started we need a few docker containers to use in our demo. Rio come with built in CI/CD pipeline capabilities and could easily build containers for us, however, I want to focus on the service mesh features and as a result have chosen to use prebuilt containers as a simple way to get started. Therefore let's build a few images and store them in our local container registry. To do so start by cloning this repo.  All command in this article assume you are in the project root folder.
 
 Build the docker images:
 
 ```bash
-$ git clone https://github.com/MileTwo/riodemo.git
-$ cd riodemo
-$ docker build --build-arg COLOR=yellow -t flower:yellow .
-$ docker build --build-arg COLOR=blue   -t flower:blue .
-$ docker build --build-arg COLOR=red    -t flower:red .
+git clone https://github.com/MileTwo/riodemo.git
+cd riodemo
+docker build --build-arg COLOR=yellow -t flower:yellow .
+docker build --build-arg COLOR=blue   -t flower:blue .
+docker build --build-arg COLOR=red    -t flower:red .
 ```
 
-The above commands will build a few docker images that are used throught this demo. The same simple [golang program](https://github.com/MileTwo/riodemo/blob/master/src/main.go) is use in each image. The program will responds to any http request with the color sepcified in the environment varable.
+The above commands will build a few docker images that are used throughout this demo. The same simple [golang program](https://github.com/MileTwo/riodemo/blob/master/src/main.go) is use in each image. The program will responds to any http request with the color specified in the environment variable.
 
 Let's test our images before we jump into Rio, just to be sure all is good. Use `docker run` to create a container and in a second terminal (or in your browser) issue an HTTP GET to your service.
 
 ```bash
-$ docker run -it --rm -p 8080:80 flower:yellow
+docker run -it --rm -p 8080:80 flower:yellow
 $ curl http://localhost:8080
 {"Color":"yellow"}
-^C
 
-$ docker run -it --rm -p 8080:80 flower:blue
+docker run -it --rm -p 8080:80 flower:blue
 $ curl http://localhost:8080
 {"Color":"blue"}
-^C
 
-$ docker run -it --rm -p 8080:80 flower:red
+docker run -it --rm -p 8080:80 flower:red
 $ curl http://localhost:8080
 {"Color":"red"}
-^C
 ```
 
 ## Demo Display Setup
 
-In order to follow the script below you may want to arange several terminal windows and a browser window so that all are visable on your desktop.
+In order to follow the script below you may want to arrange several terminal windows and a browser window so that all are visible on your desktop.
 
 * Desktop 1
   * *Terminal-1* - Use to run `watch rio ps`.  This command will display the service endpoints and information about the current revision, scale and weight.
   * *Terminal-2* - Use to run `watch rio ps --containers`.  This command will display our service containers and the docker image they are based on.
-  * *Terminal-3* - Command terminal use to issue commans throughout our demo
+  * *Terminal-3* - Command terminal use to issue commands throughout our demo
 * Desktop 2
   * *Browser* - Used to view this README, the Kailai and Grafana UIs throughout the demo.  To get the URLs for Kailai and Grafana run `rio -s ps`. The default user name is *admin* and the default password is *admin*
 
 Your setups should look something like this:
 
-
 ![demo setup](img/demo-setup.png)
 
 ## Create a Rio Service
 
-To create a Rio service in your kubernetes cluster use the `rio run` command as shown below. Before continuning be sure you stop all the containers from above.
+To create a Rio service in your kubernetes cluster use the `rio run` command as shown below. Before continuing be sure you stop all the containers from above.
 
 ```bash
 # create a new service
 $ rio run --ports 80/http --name demo/myflower flower:yellow
 demo/myflower:v0
-
 ```
 
 This `rio run` command created a service called `myflower` in the `demo` namespace. The service is an instance of the `flower:yellow` docker image. The following is sample output from `rio ps` running in *Terminal-1*
@@ -151,7 +150,6 @@ This `rio run` command created a service called `myflower` in the `demo` namespa
 ```bash
 Name               CREATED          ENDPOINT                              REVISIONS   SCALE     WEIGHT    DETAIL
 demo/myflower   27 seconds ago   https://myflower-demo.xvw8xv.on-rio.io   v0          1         100%
-
 ```
 
 Using the endpoint URL displayed above let's test our service.
@@ -165,26 +163,23 @@ Let's try pasting the endpoint URL into out browser. Notice that the TLS cert is
 
 ![browser cert](img/browser-cert.png)
 
-
 Let's see what it looks like in Kiali
 
 ```bash
 rio -s ps
 
 #looks for
-https://kiali-rio-system.3lzq3l.on-rio.io 
+https://kiali-rio-system.3lzq3l.on-rio.io
 ```
 
 ![kiali initial](img/kiali00.png)
-
-
 
 ## Auto scale a service
 
 Let's explore the auto scale features of Rio using the service we just created. Rio will default the service scale to min=1 and max=10 containers. Use the `rio inspect` to view the scaling properties.
 
 ```bash
-$ rio inspect demo/myflower
+rio inspect demo/myflower
 
 ...
 spec:
@@ -196,14 +191,14 @@ spec:
 ...
 ```
 
-We will use `hey` to put load on our service, however it does not support TLS so the unsecure URL `http://myflower-demo.xvw8xv.on-rio.io` is used instead.
+We will use `hey` to put load on our service, however it does not support TLS so the unsecured URL is used instead (http vs https): `http://myflower-demo.xvw8xv.on-rio.io`
 
 ```bash
 # Add load, make 60 requests concurrently for 1 minutes
-$ hey -z 1m -c 60 http://myflower-demo.xvw8xv.on-rio.io
+hey -z 1m -c 60 http://myflower-demo.xvw8xv.on-rio.io
 ```
 
-Watch the output in *Terminal-1*  where we are displaying `rio ps` and take note of the `SCALE` column. 
+Watch the output in *Terminal-1*  where we are displaying `rio ps` and take note of the `SCALE` column.
 
 ```bash
 # timestamp 1 - start load
@@ -228,7 +223,7 @@ demo/myflower   26 minutes ago   https://myflower-demo.xvw8xv.on-rio.io   v0    
 
 ```
 
-Here is what it looked like in *Terminal-2* where we are displaying `rio ps --containers` Notice that the number of containers correspondes to the `SCALE` above:
+Here is what it looked like in *Terminal-2* where we are displaying `rio ps --containers` Notice that the number of containers corresponds to the `SCALE` above:
 
 ```bash
 # timestamp 1 - start load
@@ -250,10 +245,9 @@ NAME                                     IMAGE           CREATED          NODE  
 demo/myflower-dd9df5648-tpxb8/myflower   flower:yellow   27 minutes ago   docker-desktop   10.1.5.7   Running
 ```
 
-
 Here is how the service *graph* looks in Kiali.  Use `rio -s ps` to display the Kiali URL, in my case `https://kiali-rio-system.xvw8xv.on-rio.io`
 
-Kiali setings:
+Kiali settings:
 
 * Graph Type
   * App
@@ -275,7 +269,7 @@ Kiali setings:
 
 ## Canary Deployment
 
-In Rio, an **applicaton** contains multiple service revisions. The `rio stage` command is used to associate a new service revision to an existing application. Therefore the command shown below will:
+In Rio, an **application** contains multiple service revisions. The `rio stage` command is used to associate a new service revision to an existing application. Therefore the command shown below will:
 
 * create a new service revision based on the `flower:blue`  image
 * associate the revision with the `myflower` application with an initial weight of 0%, meaning it receives 0% of the application's traffic
@@ -283,7 +277,7 @@ In Rio, an **applicaton** contains multiple service revisions. The `rio stage` c
 
 ```bash
 # Stage a new version
-$ rio stage --image=flower:blue demo/myflower
+rio stage --image=flower:blue demo/myflower
 ```
 
 To review an application's revision use the `rio revision` command.
@@ -291,11 +285,11 @@ To review an application's revision use the `rio revision` command.
 ```bash
 $ rio revision demo/myflower
 Name                   IMAGE           CREATED             SCALE     ENDPOINT                                        WEIGHT    DETAIL
-demo/myflower:v40157   flower:blue     24 minutes ago      1         https://myflower-v40157 -demo.xvw8xv.on-rio.io   0         
-demo/myflower:v0       flower:yellow   About an hour ago   1         https://myflower-v0-demo.xvw8xv.on-rio.io       100       
+demo/myflower:v40157   flower:blue     24 minutes ago      1         https://myflower-v40157 -demo.xvw8xv.on-rio.io   0
+demo/myflower:v0       flower:yellow   About an hour ago   1         https://myflower-v0-demo.xvw8xv.on-rio.io       100
 ```
 
-Our initial revision `myflower:v0` is based on the `flower:yellow` image and will receive all of the appliction's traffic. The revision `myflower:v40157 ` is the one we just staged. I am not sure how the version numbers are determined, I woud have expected `v1`. At any rate we see this revision has a unique URL and the `myflower` application too has its own URL. Let's see what we get when we hit each endpoint.
+Our initial revision `myflower:v0` is based on the `flower:yellow` image and will receive all of the application's traffic. The revision `myflower:v40157` is the one we just staged. I am not sure how the version numbers are determined, I would have expected `v1`. At any rate we see this revision has a unique URL and the `myflower` application too has its own URL. Let's see what we get when we hit each endpoint.
 
 ```bash
 # the initial revision
@@ -303,7 +297,7 @@ $ curl https://myflower-v0-demo.xvw8xv.on-rio.io
 {"Color":"yellow"}
 
 # the second revision
-curl https://myflower-v40157 -demo.xvw8xv.on-rio.io
+$ curl https://myflower-v40157-demo.xvw8xv.on-rio.io
 {"Color":"blue"}
 
 # The application returns "yellow" because the weight of the initial revision is 100%
@@ -311,21 +305,20 @@ $ curl https://myflower-demo.xvw8xv.on-rio.io
 {"Color":"yellow"}
 ```
 
-Eventhough each revision has its own URL and can be directly accesed by other services this is not the intention.  The idea is to access the appliction and let it decide based on its routing rules which revision to use.
+Even though each revision has its own URL and can be directly accessed by other services this is not the intention.  The idea is to access the application and let it decide based on its routing rules which revision to use.
 
-Here is how it looks in Kiali if we switch to graph type of "versiond app":
+Here is how it looks in Kiali if we switch to graph type of "versioned app":
 
 ![kiali1](img/kiali02.png)
 
-This screen shot helps make clear the Rio concepts of **application** and **service**.  An application contains multiple service revisions and a service is a scalable set of containers.  In kubernetes terms you can think of a service as a deployment but an application does not really have a kubernetes equvilent. It is a meta object used to enable additional Rio functionality.
-
+This screen shot helps make clear the Rio concepts of **application** and **service**.  An application contains multiple service revisions and a service is a scalable set of containers.  In kubernetes terms you can think of a service as a deployment but an application does not really have a kubernetes equivalent. It is a meta object used to enable additional Rio functionality.
 
 Now we are ready to promote our new revision and make it live. The `rio promote` command is used for this and it will gradually shift traffic over to the new revision. By default it will apply a 5% shift every 5 seconds.
 
 ```bash
 # Promote service
-$ rio promote demo/myflower:v40157 
-$ hey -z 3m -c 30 http://myflower-demo.xvw8xv.on-rio.io
+rio promote demo/myflower:v40157
+hey -z 3m -c 30 http://myflower-demo.xvw8xv.on-rio.io
 
 # timestamp 1 - Trffic is swiching over to v40157  it is receiving 15%
 Name            CREATED       ENDPOINT                                 REVISIONS   SCALE     WEIGHT    DETAIL
@@ -347,7 +340,7 @@ demo/myflower   2 hours ago   https://myflower-demo.xvw8xv.on-rio.io   v0,v40157
 Name            CREATED       ENDPOINT                                 REVISIONS   SCALE     WEIGHT    DETAIL
 demo/myflower   2 hours ago   https://myflower-demo.xvw8xv.on-rio.io:  v0,v40157    1,1       5%,95%
 
-# timestamp 6 - promotion complete 100% of the traffic is directed at v40157 
+# timestamp 6 - promotion complete 100% of the traffic is directed at v40157
 Name            CREATED       ENDPOINT                                 REVISIONS   SCALE     WEIGHT    DETAIL
 demo/myflower   2 hours ago   https://myflower-demo.xvw8xv.on-rio.io   v40157       1         100%
 ```
@@ -356,13 +349,10 @@ Here is what the promotion looks like in the Kiali UI. Just like above at each p
 
 > timestamp 1
 ![kiali1](img/kiali03.png)
-
 > timestamp 2
 ![kiali1](img/kiali04.png)
-
 > timestamp 3
 ![kiali1](img/kiali05.png)
-
 > timestamp 4
 ![kiali1](img/kiali06.png)
 
@@ -370,16 +360,18 @@ Grafana has several out-of-the-box dashboards for Istio.  Here is a sample Istio
 
 ![grafana performance dash](img/Grafana_Istio_Performance_Dashboard.png)
 
-In some cases we don't want to promote right away but instead we can choose to set the weights manually. Perhaps we want to give our new version 5% of the traffic and then watch it for a few days before so we can gain confidence that all is good before we promote. 
+In some cases we don't want to promote right away but instead we can choose to set the weights manually. Perhaps we want to give our new version 5% of the traffic and then watch it for a few days so we can gain confidence that all is good before we promote.
 
 Below are a few examples of how to set the weights manually:
 
 ```bash
 # Manually adjusting weight between revisions
-$ rio weight demo/myflower:v0=80% demo/myflower:v40157 =20%
+rio weight demo/myflower:v0=80% demo/myflower:v40157 =20%
 ```
 
 ## What just happened
+
+Let's pause for a minute to review what just happened because with only a few commands we covered a lot of ground.
 
 * We created a new service using `rio run`
 * Rio generated a domain name for the service `xvw8xv.on-rio.io`
@@ -388,13 +380,13 @@ $ rio weight demo/myflower:v0=80% demo/myflower:v40157 =20%
 * When we removed load, Rio scaled the service down for us
 * When we installed a new revision, Rio automatically moved traffic to the newest app revision for us
 
-That is alot of functionality and all we had to do was crate our docker images and issue a few Rio commands!
+That is a lot of functionality and all we had to do was crate our docker images and issue a few Rio commands!
 
 ## Serverless
 
-In this context serverless referrs to a form of autoscaling. It is the ability for a service to scale down to zero instances when there is no workload and then automaticlly scale up when a new request is made.  
+In this context serverless refers to a form of autoscaling. It is the ability for a service to scale down to zero instances when there is no workload and then automatically scale up when a new request is made.  
 
-With a Rio service there are no language or execution time restrictions like the restrictions that can be found with some other serverless platforms. You are free to put anything you like in your container and the system will run it for as long as necessary. All you have to do is set the minimum and maximum autoscalling parameters and Rio will monitor the workload and scale it as neccessary. Consider a use case that would be dificult to accomplish on some serverless platforms. For example, some machine learning jobs want to allocate GPUs and take a long time to complete while at the same time are used infrequently.  With the ability to scale the ML services to zero instances the GPU resources can be freed up for other jobs to use.
+With a Rio service there are no language or execution time restrictions like the restrictions that can be found with some other serverless platforms. You are free to put anything you like in your container and the system will run it for as long as necessary. All you have to do is set the minimum and maximum autoscaling parameters and Rio will monitor the workload and scale it as necessary. Consider a use case that would be difficult to accomplish on some serverless platforms. For example, some machine learning jobs want to allocate GPUs and take a long time to complete while at the same time are used infrequently.  With the ability to scale the ML services to zero instances the GPU resources can be freed up for other jobs to use.
 
 Let's see autoscaling-to-zero in action.
 
@@ -402,7 +394,7 @@ Note that below we are creating a new service with scale 0 to 10 instances. Inst
 
 ```bash
 # create new service with ability to scale from 0 to 10 instances
-$ rio run --ports 80/http --scale=0-10 --name demo/myserverlessflower flower:yellow
+rio run --ports 80/http --scale=0-10 --name demo/myserverlessflower flower:yellow
 
 # wait a couple of minutes for the workload to scale to zero
 ...
@@ -415,7 +407,7 @@ NAME      IMAGE     CREATED   NODE      IP        STATE     DETAIL
 # list the services and notice we have a service endpoint eventhough there are no running service instances (SCALE 0/1
 $ rio ps
 NAME                      CREATED         ENDPOINT                                           REVISIONS   SCALE     WEIGHT    DETAIL
-demo/myserverlessflower   2 minutes ago   https://myserverlessflower-demo.7u0o75.on-rio.io   v0          0/1       100%           
+demo/myserverlessflower   2 minutes ago   https://myserverlessflower-demo.7u0o75.on-rio.io   v0          0/1       100%
 
 # make a service request and after a small "cold start" delay we see a response
 $ curl https://myserverlessflower-demo.7u0o75.on-rio.io
@@ -424,24 +416,23 @@ $ curl https://myserverlessflower-demo.7u0o75.on-rio.io
 # Now when we list the service we see the SCALE is 1
 $ rio ps
 NAME                      CREATED         ENDPOINT                                           REVISIONS   SCALE     WEIGHT    DETAIL
-demo/myserverlessflower   6 minutes ago   https://myserverlessflower-demo.7u0o75.on-rio.io   v0          1         100%      
+demo/myserverlessflower   6 minutes ago   https://myserverlessflower-demo.7u0o75.on-rio.io   v0          1         100%
 
 # And we now see one instance of the service is active
 $ rio ps --containers
 NAME                                                             IMAGE           CREATED          NODE             IP          STATE     DETAIL
-demo/myserverlessflower-86d94bfd64-42bf4/myserverlessflower   flower:yellow   33 seconds ago   docker-desktop   10.1.4.83   Running 
-
+demo/myserverlessflower-86d94bfd64-42bf4/myserverlessflower   flower:yellow   33 seconds ago   docker-desktop   10.1.4.83   Running
 ```
 
 In summary, serverless is just an autoscaling feature of Rio with the ability to scale to zero instances.
 
 ## Adding Router
 
-Router is a set of L7 load-balancing rules that can route between your services. It can add Header-based, path-based routing, cookies and other rules. 
+Router is a set of L7 load-balancing rules that can route between your services. It can add Header-based, path-based routing, cookies and other rules.
 
 ```bash
 # create route
-$ rio route add myflowerrt.demo to demo/myflower
+rio route add myflowerrt.demo to demo/myflower
 
 # display route URL
 $ rio route
@@ -449,9 +440,8 @@ NAME              URL                                        OPTS      ACTION   
 demo/myflowerrt   https://myflowerrt-demo.3lzq3l.on-rio.io             to        myflower,port=80
 
 # test route
-$ curl https://myflowerrt-demo.3lzq3l.on-rio.io 
+$ curl https://myflowerrt-demo.3lzq3l.on-rio.io
 {"Color":"yellow"}
-
 ```
 
 Example uses cases include:
@@ -461,7 +451,7 @@ Example uses cases include:
 * Create a route to a different port
 * Create router based on header
 * Create router based on cookies
-* Create route based on HTTP method 
+* Create route based on HTTP method
 * Add, set or remove headers
 * Mirror traffic
 * Rewrite host header and path
@@ -488,6 +478,6 @@ https://grafana-rio-system.3lzq3l.on-rio.io
 
 ## Rio File
 
-The `rio run` command is powerful but just like the `docker run` command it can quickly get out of hand and hard to maintain all the command line parameters.  Therefore, Rio has added support for a more user-friendly docker-compose-style config file call Riofile. Riofile allows you define rio services, apps, routes, external services, configmap, and secrets. 
+The `rio run` command is powerful but just like the `docker run` command it can quickly get out of hand and hard to maintain all the command line parameters.  Therefore, Rio has added support for a more user-friendly docker-compose-style config file call Riofile. Riofile allows you define rio services, apps, routes, external services, configmap, and secrets.
 
-For more information see the [official Riod docs](https://github.com/rancher/rio/blob/master/docs/README.md#using-riofile) for more information.
+For more information see the [official Rio docs](https://github.com/rancher/rio/blob/master/docs/README.md#using-riofile) for more information.
